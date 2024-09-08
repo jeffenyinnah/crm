@@ -29,14 +29,16 @@ interface TimeOffRequest {
 const RequestTimeOff = () => {
   const [requests, setRequests] = useState<TimeOffRequest[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const { userId } = useAuth();
   const [newRequest, setNewRequest] = useState({
     employeeId: "",
     leaveType: "",
     leaveFrom: "",
     leaveTo: "",
     days: 0,
+    userId: userId,
   });
-  const { userId } = useAuth();
+
   useEffect(() => {
     fetchEmployees();
     fetchRequests();
@@ -87,6 +89,7 @@ const RequestTimeOff = () => {
           leaveFrom: "",
           leaveTo: "",
           days: 0,
+          userId: userId,
         });
         fetchRequests();
       } else {

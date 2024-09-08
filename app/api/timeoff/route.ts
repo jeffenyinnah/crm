@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
   }
   try {
-    const { employeeId, leaveType, leaveFrom, leaveTo, days } = await req.json();
+    const { employeeId, leaveType, leaveFrom, leaveTo, days, userId } = await req.json();
     
     // Fetch employee using document ID
     const employeeDoc = await getDoc(doc(db, "employees", employeeId));
