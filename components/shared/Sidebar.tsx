@@ -12,7 +12,9 @@ import {
   CheckSquare,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
+import { SignOutButton } from "@clerk/nextjs";
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -58,7 +60,7 @@ const Sidebar = () => {
       <nav
         className={`${
           isOpen ? "translate-x-0" : "-translate-x-full"
-        } w-full md:w-64 bg-gray-100 h-screen fixed top-0 left-0 transform transition-transform duration-200 ease-in-out z-50 shadow-lg md:translate-x-0`}
+        } w-full md:w-64 bg-gray-100 h-screen fixed top-0 left-0 transform transition-transform duration-200 ease-in-out z-50 shadow-lg md:translate-x-0 flex flex-col`}
       >
         <div className="p-6 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Aplo - CRM</h1>
@@ -68,7 +70,7 @@ const Sidebar = () => {
             </Button>
           )}
         </div>
-        <ul className="space-y-2">
+        <ul className="space-y-2 flex-grow">
           {links.map((link) => (
             <li key={link.href}>
               <Link
@@ -84,6 +86,17 @@ const Sidebar = () => {
             </li>
           ))}
         </ul>
+        <div className="p-4">
+          <SignOutButton>
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-center"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </SignOutButton>
+        </div>
       </nav>
 
       {isOpen && isMobile && (
