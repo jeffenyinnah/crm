@@ -3,9 +3,16 @@ import { collection, addDoc, getDocs, query, where, doc, updateDoc, getDoc } fro
 import { db } from "@/lib/firebase";
 
 export async function GET(req: NextRequest) {
+  const userId = req.nextUrl.searchParams.get('userId');
+
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+  }
   try {
     const querySnapshot = await getDocs(collection(db, "timeOffRequests"));
+    const q = query(collection(db, "timeOffRequests"), where("userId", "==", userId));
     const requests = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
     return NextResponse.json(requests, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch time off requests' }, { status: 500 });
@@ -13,6 +20,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const userId = req.nextUrl.searchParams.get('userId');
+
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+  }
   try {
     const { employeeId, leaveType, leaveFrom, leaveTo, days } = await req.json();
     
@@ -34,10 +46,10 @@ export async function POST(req: NextRequest) {
       leaveFrom,
       leaveTo,
       days,
-      status: "Pending"
+      status: "Pending",
+      userId: userId
     });
-
-    console.log(`Time off request created with ID: ${docRef.id}`);
+    await updateDoc(docRef, { id: docRef.id });
     return NextResponse.json({ id: docRef.id, message: 'Time off request created successfully' }, { status: 201 });
   } catch (error) {
     console.error('Error creating time off request:', error);
@@ -46,6 +58,11 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const userId = req.nextUrl.searchParams.get('userId');
+
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+  }
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
 

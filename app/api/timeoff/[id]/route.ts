@@ -20,32 +20,39 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function PUT(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get('id');
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const id = params.id;
+  const { userId, status } = await req.json();
 
-  if (!id) {
-    return NextResponse.json({ error: 'Missing ID parameter' }, { status: 400 });
+  if (!id || !userId || !status) {
+    return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
   }
   
   try {
-    const { status } = await req.json();
-    const docRef = doc(db, "timeOffRequests", id as string);
+    const docRef = doc(db, "timeOffRequests", id);
     await updateDoc(docRef, { status });
     return NextResponse.json({ message: 'Time off request updated successfully' }, { status: 200 });
   } catch (error) {
+    console.error('Error updating time off request:', error);
     return NextResponse.json({ error: 'Failed to update time off request' }, { status: 500 });
   }
 }
 
-export async function DELETE(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get('id');
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const id = params.id;
+
+  if (!id) {
+    return NextResponse.json({ error: 'Missing ID parameter' }, { status: 400 });
+  }
 
   try {
-    await deleteDoc(doc(db, "timeOffRequests", id as string));
+    await deleteDoc(doc(db, "timeOffRequests", id));
     return NextResponse.json({ message: 'Time off request deleted successfully' }, { status: 200 });
   } catch (error) {
+    console.error('Error deleting time off request:', error);
     return NextResponse.json({ error: 'Failed to delete time off request' }, { status: 500 });
   }
 }

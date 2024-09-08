@@ -25,32 +25,38 @@ export default function EmployeePage() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-4 sm:space-y-0">
         <h1 className="text-2xl font-bold">Employee Management</h1>
-        <div>
-          <Button className="mr-2">Export</Button>
-          <Button onClick={() => setIsAddDialogOpen(true)}>Add Employee</Button>
+        <div className="flex space-x-2">
+          <Button className="w-full sm:w-auto">Export</Button>
+          <Button
+            onClick={() => setIsAddDialogOpen(true)}
+            className="w-full sm:w-auto"
+          >
+            Add Employee
+          </Button>
         </div>
       </div>
 
-      <div className="flex mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         <Button
           onClick={() => setActiveTab("manageEmployees")}
           variant={activeTab === "manageEmployees" ? "default" : "outline"}
-          className="mr-2"
+          className="flex-grow sm:flex-grow-0"
         >
           Manage Employees
         </Button>
         <Button
           onClick={() => setActiveTab("organizationChart")}
           variant={activeTab === "organizationChart" ? "default" : "outline"}
-          className="mr-2"
+          className="flex-grow sm:flex-grow-0"
         >
           Organization Chart
         </Button>
         <Button
           onClick={() => setActiveTab("requestTimeOff")}
           variant={activeTab === "requestTimeOff" ? "default" : "outline"}
+          className="flex-grow sm:flex-grow-0"
         >
           Request Time Off
         </Button>

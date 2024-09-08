@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 // GET single employee
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  
   try {
     const docRef = doc(db, 'employees', params.id);
     const docSnap = await getDoc(docRef);

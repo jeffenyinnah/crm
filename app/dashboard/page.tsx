@@ -1,45 +1,38 @@
-import { auth } from "@clerk/nextjs/server";
+"use client";
+
 import { redirect } from "next/navigation";
 import DashboardMetrics from "@/components/Dashboard/DashboardMetrics";
-import WorkHoursChart from "@/components/Dashboard/WorkHoursChart";
-import MonthlyEvents from "@/components/Dashboard/MonthlyEvents";
-import TodaySchedule from "@/components/Dashboard/TodaySchedule";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmployeeTable from "@/components/Dashboard/EmployeeTable";
+import AgeDistribution from "@/components/Dashboard/AgeDistribution ";
+import { useAuth } from "@clerk/nextjs";
 
 export default function DashboardPage() {
-  const { userId } = auth();
+  const { userId } = useAuth();
 
-  // if (!userId) {
-  //   redirect("/sign-in");
-  // }
+  if (!userId) {
+    redirect("/sign-in");
+  }
 
   return (
     <div className="p-6 md:p-8 lg:p-10 space-y-6">
       <h1 className="text-3xl font-bold">Dashboard</h1>
       <DashboardMetrics />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="col-span-1 md:col-span-2 shadow-md">
+        <Card className="shadow-md">
           <CardHeader>
-            <CardTitle>Work Hours</CardTitle>
+            <CardTitle>Employee Age Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <WorkHoursChart />
+            <AgeDistribution />
           </CardContent>
         </Card>
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle>Monthly Events</CardTitle>
+            <CardTitle>Employee Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <MonthlyEvents />
-          </CardContent>
-        </Card>
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle>Today's Schedule</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TodaySchedule />
+            <EmployeeTable />
           </CardContent>
         </Card>
       </div>

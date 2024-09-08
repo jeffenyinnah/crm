@@ -4,22 +4,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Filter, Edit, Trash } from "lucide-react";
+import { Filter, Edit, Trash, ChevronRight } from "lucide-react";
 import EditEmployeeModal from "./EditEmployeeModal";
 import { useToast, toast } from "@/components/ui/use-toast";
-
-interface Employee {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  department: string;
-  jobTitle: string;
-  contractType: string;
-  attendance: string;
-}
+import { useAuth } from "@clerk/nextjs";
+import { Employee } from "@/types/employee";
 
 const EmployeeList = () => {
+  const { userId } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -27,12 +19,12 @@ const EmployeeList = () => {
 
   useEffect(() => {
     fetchEmployees();
-  }, []);
+  }, [userId]);
 
   const fetchEmployees = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/employees");
+      const response = await fetch(`/api/employees?userId=${userId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch employees");
       }
@@ -131,7 +123,7 @@ const EmployeeList = () => {
 
   return (
     <div className="p-4">
-      <div className="flex justify-between mb-4">
+      <div className="flex flex-col sm:flex-row justify-between mb-4 gap-4">
         <Input
           type="text"
           placeholder="Search keyword..."
@@ -139,76 +131,94 @@ const EmployeeList = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
         />
-        <Button variant="outline">
+        <Button variant="outline" className="sm:w-auto">
           <Filter className="mr-2 h-4 w-4" /> Filter
         </Button>
       </div>
-      <table className="w-full">
-        <thead>
-          <tr className="text-left text-gray-500">
-            <th className="py-2">Employee Name</th>
-            <th>Phone Number</th>
-            <th>Department</th>
-            <th>Job Title</th>
-            <th>Contract Type</th>
-            <th>Attendance</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredEmployees.map((employee) => (
-            <tr key={employee.id} className="border-t">
-              <td className="py-4">
-                <div className="flex items-center">
-                  <Avatar className="mr-2">
-                    <AvatarImage
-                      src={`https://api.dicebear.com/6.x/initials/svg?seed=${employee.name}`}
-                    />
-                    <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div>{employee.name}</div>
-                    <div className="text-sm text-gray-500">
-                      {employee.email}
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="hidden md:table-header-group">
+            <tr className="text-left text-gray-500">
+              <th className="py-2">Employee Name</th>
+              <th className="hidden lg:table-cell">Phone Number</th>
+              <th>Department</th>
+              <th className="hidden lg:table-cell">Job Title</th>
+              <th className="hidden lg:table-cell">Contract Type</th>
+              <th className="hidden lg:table-cell">Attendance</th>
+              <th className="hidden lg:table-cell">Work Hours</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredEmployees.map((employee) => (
+              <tr key={employee.id} className="border-t">
+                <td className="py-4">
+                  <div className="flex items-center">
+                    <Avatar className="mr-2">
+                      <AvatarImage
+                        src={`https://api.dicebear.com/6.x/initials/svg?seed=${employee.name}`}
+                      />
+                      <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div>{employee.name}</div>
+                      <div className="text-sm text-gray-500 md:hidden">
+                        {employee.department}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </td>
-              <td>{employee.phone}</td>
-              <td>
-                <span
-                  className="px-2 py-1 rounded-full text-xs"
-                  style={{
-                    backgroundColor: getColorForDepartment(employee.department),
-                    color: "white",
-                  }}
-                >
-                  {employee.department}
-                </span>
-              </td>
-              <td>{employee.jobTitle}</td>
-              <td>{employee.contractType}</td>
-              <td>{employee.attendance}</td>
-              <td>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleEdit(employee)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(employee.id)}
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                </td>
+                <td className="hidden lg:table-cell">{employee.phone}</td>
+                <td className="hidden md:table-cell">
+                  <span
+                    className="px-2 py-1 rounded-full text-xs"
+                    style={{
+                      backgroundColor: getColorForDepartment(
+                        employee.department
+                      ),
+                      color: "white",
+                    }}
+                  >
+                    {employee.department}
+                  </span>
+                </td>
+                <td className="hidden lg:table-cell">{employee.jobTitle}</td>
+                <td className="hidden lg:table-cell">
+                  {employee.contractType}
+                </td>
+                <td className="hidden lg:table-cell">{employee.attendance}</td>
+                <td className="hidden lg:table-cell">{employee.workHours}</td>
+                <td>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(employee)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(employee.id)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="md:hidden"
+                      onClick={() => handleEdit(employee)}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {isLoading && <p>Loading...</p>}
       {editingEmployee && (
         <EditEmployeeModal

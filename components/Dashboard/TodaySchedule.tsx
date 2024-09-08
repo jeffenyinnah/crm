@@ -33,7 +33,7 @@ const TodaySchedule = () => {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">Today's Schedule</h2>
+      <h2 className="text-xl font-bold mb-4">Today&apos;s Schedule</h2>
       <ul>
         {schedule.map((item) => (
           <li key={item.id} className="mb-2">

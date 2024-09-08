@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "../ui/use-toast";
+import { useAuth } from "@clerk/nextjs";
 
 interface ChartNode {
   id: string;
@@ -10,19 +12,24 @@ interface ChartNode {
   title: string;
   parentId: string | null;
   children: ChartNode[];
+  userId: string;
 }
 
 const OrganizationChart = () => {
   const [chartData, setChartData] = useState<ChartNode | null>(null);
   const [editingNode, setEditingNode] = useState<ChartNode | null>(null);
+  const { userId } = useAuth();
 
   useEffect(() => {
     fetchChartData();
   }, []);
 
   const fetchChartData = async () => {
+    if (!userId) {
+      return;
+    }
     try {
-      const response = await fetch("/api/organization-chart");
+      const response = await fetch(`/api/organization-chart?userId=${userId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch organization chart data");
       }
@@ -30,13 +37,17 @@ const OrganizationChart = () => {
       setChartData(buildHierarchy(data));
     } catch (error) {
       console.error("Error fetching organization chart:", error);
-      alert("Error fetching organization chart. Please try again.");
+      toast({
+        title: "Error fetching organization chart",
+        description: "Error fetching organization chart. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const buildHierarchy = (data: any[]): ChartNode => {
     const idMap = new Map(
-      data.map((item) => [item.id, { ...item, children: [] }])
+      data.map((item) => [item.id, { ...item, children: [], userId: userId }])
     );
     let root = null;
 
@@ -60,21 +71,32 @@ const OrganizationChart = () => {
         name: "New Employee",
         title: "New Position",
         parentId: parentId,
+        userId: userId,
       };
-      const response = await fetch("/api/organization-chart", {
+      const response = await fetch(`/api/organization-chart?userId=${userId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(newNode),
       });
+      toast({
+        title: "Node added successfully",
+        description: "Node added successfully",
+        className: "bg-green-500 text-white",
+      });
+
       if (!response.ok) {
         throw new Error("Failed to add node");
       }
       fetchChartData();
     } catch (error) {
       console.error("Error adding node:", error);
-      alert("Error adding node. Please try again.");
+      toast({
+        title: "Error adding node",
+        description: "Error adding node. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -89,7 +111,13 @@ const OrganizationChart = () => {
           name: node.name,
           title: node.title,
           parentId: node.parentId,
+          userId: userId,
         }),
+      });
+      toast({
+        title: "Node updated successfully",
+        description: "Node updated successfully",
+        className: "bg-green-500 text-white",
       });
       if (!response.ok) {
         throw new Error("Failed to update node");
@@ -98,16 +126,29 @@ const OrganizationChart = () => {
       fetchChartData();
     } catch (error) {
       console.error("Error updating node:", error);
-      alert("Error updating node. Please try again.");
+      toast({
+        title: "Error updating node",
+        description: "Error updating node. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const deleteNode = async (id: string) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this node and all its children?"
-      )
-    ) {
+    toast({
+      title: "Confirm deletion",
+      description:
+        "Are you sure you want to delete this node and all its children?",
+      action: (
+        <Button variant="destructive" onClick={() => handleDeleteNode(id)}>
+          Delete
+        </Button>
+      ),
+      duration: 1000,
+      variant: "destructive",
+    });
+
+    const handleDeleteNode = async (id: string) => {
       try {
         const response = await fetch(`/api/organization-chart/${id}`, {
           method: "DELETE",
@@ -118,9 +159,13 @@ const OrganizationChart = () => {
         fetchChartData();
       } catch (error) {
         console.error("Error deleting node:", error);
-        alert("Error deleting node. Please try again.");
+        toast({
+          title: "Error deleting node",
+          description: "Error deleting node. Please try again.",
+          variant: "destructive",
+        });
       }
-    }
+    };
   };
 
   const renderNode = (node: ChartNode) => (
