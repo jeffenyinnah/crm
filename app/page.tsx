@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { SignedIn, UserButton, SignOutButton } from "@clerk/nextjs";
+import { SignedIn, UserButton, SignOutButton, SignedOut } from "@clerk/nextjs";
 
 export default function HomePage() {
   return (
@@ -18,15 +18,13 @@ export default function HomePage() {
               <Button variant="ghost" className="hidden sm:inline-flex">
                 <Link href="/dashboard">Dashboard</Link>
               </Button>
-            </SignedIn>
-            <SignedIn>
               <UserButton />
             </SignedIn>
-            <SignOutButton>
+            <SignedOut>
               <Button variant="default">
                 <Link href="/sign-in">Sign In</Link>
               </Button>
-            </SignOutButton>
+            </SignedOut>
           </div>
         </header>
 

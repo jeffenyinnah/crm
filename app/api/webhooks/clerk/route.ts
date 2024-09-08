@@ -1,9 +1,10 @@
 import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
+import { updateDoc, doc, deleteDoc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export async function POST(req: Request) {
-  // You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
   const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET
 
   if (!WEBHOOK_SECRET) {
@@ -41,17 +42,47 @@ export async function POST(req: Request) {
     }) as WebhookEvent
   } catch (err) {
     console.error('Error verifying webhook:', err)
-    return new Response('Error occured', {
+    return new Response('Error occurred', {
       status: 400,
     })
   }
 
-  // Do something with the payload
-  // For this guide, you simply log the payload to the console
   const { id } = evt.data
   const eventType = evt.type
-  console.log(`Webhook with and ID of ${id} and type of ${eventType}`)
-  console.log('Webhook body:', body)
+  
+  if (typeof id !== 'string') {
+    console.error('Invalid or missing user ID in webhook payload');
+    return new Response('Invalid user ID', { status: 400 });
+  }
+
+  try {
+    const userRef = doc(db, 'users', id);
+
+    if (eventType === 'user.created') {
+      await setDoc(userRef, {
+        email: evt.data.email_addresses?.[0]?.email_address ?? '',
+        firstName: evt.data.first_name ?? '',
+        lastName: evt.data.last_name ?? '',
+        userId: id,
+        createdAt: evt.data.created_at ?? new Date().toISOString(),
+        updatedAt: evt.data.updated_at ?? new Date().toISOString(),
+        role: 'user',
+        profilePicture: evt.data.image_url ?? '',
+      });
+    } else if (eventType === 'user.updated') {
+      await updateDoc(userRef, {
+        email: evt.data.email_addresses?.[0]?.email_address ?? '',
+        firstName: evt.data.first_name ?? '',
+        lastName: evt.data.last_name ?? '',
+        updatedAt: evt.data.updated_at ?? new Date().toISOString(),
+      });
+    } else if (eventType === 'user.deleted') {
+      await deleteDoc(userRef);
+    }
+  } catch (error) {
+    console.error('Error processing webhook:', error);
+    return new Response('Error processing webhook', { status: 500 });
+  }
 
   return new Response('', { status: 200 })
 }
