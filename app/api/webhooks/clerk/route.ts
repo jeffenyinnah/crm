@@ -1,10 +1,12 @@
 import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
-import { updateDoc, doc, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { collection, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
+
 
 export async function POST(req: Request) {
+  // You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
   const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET
 
   if (!WEBHOOK_SECRET) {
@@ -42,47 +44,62 @@ export async function POST(req: Request) {
     }) as WebhookEvent
   } catch (err) {
     console.error('Error verifying webhook:', err)
-    return new Response('Error occurred', {
+    return new Response('Error occured', {
       status: 400,
     })
   }
 
+  // Do something with the payload
+  // For this guide, you simply log the payload to the console
   const { id } = evt.data
   const eventType = evt.type
-  
-  if (typeof id !== 'string') {
-    console.error('Invalid or missing user ID in webhook payload');
-    return new Response('Invalid user ID', { status: 400 });
-  }
 
-  try {
-    const userRef = doc(db, 'users', id);
+  //Create user in Firebase
+  if (evt.data && 'id' in evt.data) {
+    const { id } = evt.data;
+    const usersCollectionRef = collection(db, 'users');
+    const userRef = doc(usersCollectionRef, id);
 
-    if (eventType === 'user.created') {
-      await setDoc(userRef, {
-        email: evt.data.email_addresses?.[0]?.email_address ?? '',
-        firstName: evt.data.first_name ?? '',
-        lastName: evt.data.last_name ?? '',
-        userId: id,
-        createdAt: evt.data.created_at ?? new Date().toISOString(),
-        updatedAt: evt.data.updated_at ?? new Date().toISOString(),
-        role: 'user',
-        profilePicture: evt.data.image_url ?? '',
-      });
-    } else if (eventType === 'user.updated') {
-      await updateDoc(userRef, {
-        email: evt.data.email_addresses?.[0]?.email_address ?? '',
-        firstName: evt.data.first_name ?? '',
-        lastName: evt.data.last_name ?? '',
-        updatedAt: evt.data.updated_at ?? new Date().toISOString(),
-      });
-    } else if (eventType === 'user.deleted') {
-      await deleteDoc(userRef);
+    switch (evt.type) {
+      case 'user.created':
+        if ('email_addresses' in evt.data && 'image_url' in evt.data && 'first_name' in evt.data && 'last_name' in evt.data) {
+          await setDoc(userRef, {
+            userId: id,
+            email: evt.data.email_addresses[0]?.email_address,
+            firstName: evt.data.first_name,
+            lastName: evt.data.last_name,
+            photo: evt.data.image_url,
+            createdAt: new Date(),
+          });
+        }
+        break;
+
+      case 'user.updated':
+        if ('email_addresses' in evt.data && 'image_url' in evt.data && 'first_name' in evt.data && 'last_name' in evt.data) {
+          await updateDoc(userRef, {
+            email: evt.data.email_addresses[0]?.email_address,
+            firstName: evt.data.first_name,
+            lastName: evt.data.last_name,
+            photo: evt.data.image_url,
+            updatedAt: new Date(),
+          });
+        }
+        break;
+
+      case 'user.deleted':
+        await deleteDoc(userRef);
+        break;
+
+      default:
+        console.log(`Unhandled event type: ${evt.type}`);
     }
-  } catch (error) {
-    console.error('Error processing webhook:', error);
-    return new Response('Error processing webhook', { status: 500 });
+  } else {
+    console.log('Invalid event data structure');
   }
+  
+
+  
+    
 
   return new Response('', { status: 200 })
 }
