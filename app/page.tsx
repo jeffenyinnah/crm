@@ -81,8 +81,8 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold mb-8">See Aplo-CRM in action</h2>
             <div className="bg-gray-200 rounded-lg p-4 max-w-3xl mx-auto">
               <img
-                src="/api/placeholder/800/450"
-                alt="CRM Pro Demo"
+                src="/crm.png"
+                alt="Aplo-CRM"
                 className="rounded-md shadow-md"
               />
             </div>
